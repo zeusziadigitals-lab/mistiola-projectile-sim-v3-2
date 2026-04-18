@@ -96,15 +96,20 @@ export const SimulationCanvas = ({
     };
   }, []);
 
+  const hoverRef = useRef<HoverInfo | null>(null);
+  hoverRef.current = hover;
+
   useEffect(() => {
     let raf = 0;
     const render = () => {
-      draw();
+      drawRef.current?.();
       raf = requestAnimationFrame(render);
     };
     raf = requestAnimationFrame(render);
     return () => cancelAnimationFrame(raf);
   }, []);
+
+  const drawRef = useRef<() => void>();
 
   // Pointer interaction: dragging target, plus hovering trajectory for details.
   useEffect(() => {
@@ -433,6 +438,7 @@ export const SimulationCanvas = ({
     }
 
     // Hover tooltip on predicted path
+    const hover = hoverRef.current;
     if (hover) {
       ctx.fillStyle = hsl("--apex", 1);
       ctx.beginPath();
@@ -467,10 +473,12 @@ export const SimulationCanvas = ({
     }
   };
 
+  drawRef.current = draw;
+
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full min-h-[360px] rounded-xl overflow-hidden border border-border/60 panel-gradient animate-fade-in"
+      className="absolute inset-0 rounded-xl overflow-hidden border border-border/60 panel-gradient animate-fade-in"
     >
       <canvas
         ref={canvasRef}

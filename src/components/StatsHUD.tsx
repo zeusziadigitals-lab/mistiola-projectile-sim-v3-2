@@ -60,9 +60,11 @@ export const StatsHUD = ({ state, status, range, maxHeight, flightTime, targetMo
   );
 };
 
-const Row = ({ label, value, accent }: { label: string; value: string; accent?: string }) => (
-  <div className="flex items-center justify-between gap-3">
-    <span className="text-muted-foreground">{label}</span>
-    <span className={`font-mono font-medium ${accent ?? ""}`}>{value}</span>
-  </div>
-);
+function Row({ label, value, accent }: { label: string; value: string; accent?: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={`font-mono font-medium ${accent ?? ""}`}>{value}</span>
+    </div>
+  );
+}

@@ -52,7 +52,7 @@ const Index = () => {
             setTargetX={setTargetX}
           />
         </aside>
-        <section className="relative min-h-[60vh] lg:min-h-[calc(100vh-100px)]">
+        <section className="relative h-[70vh] lg:h-[calc(100vh-100px)] min-h-[420px]">
           <SimulationCanvas
             params={params}
             state={state}
