@@ -1,16 +1,84 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { SimulatorHeader } from "@/components/SimulatorHeader";
+import { ControlPanel } from "@/components/ControlPanel";
+import { SimulationCanvas } from "@/components/SimulationCanvas";
+import { StatsHUD } from "@/components/StatsHUD";
+import { useSimulation } from "@/hooks/useSimulation";
+import { ProjectileParams } from "@/lib/physics";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const DEFAULT_PARAMS: ProjectileParams = {
+  v0: 30,
+  angleDeg: 45,
+  height: 0,
+  mass: 1,
+  gravity: 9.8,
+  dragEnabled: false,
+  dragCoefficient: 0.05,
+};
+
+const Index = () => {
+  const [params, setParams] = useState<ProjectileParams>(DEFAULT_PARAMS);
+  const [showGrid, setShowGrid] = useState(true);
+  const [showVectors, setShowVectors] = useState(true);
+  const [showTrail, setShowTrail] = useState(true);
+  const [targetMode, setTargetMode] = useState(false);
+  const [targetX, setTargetX] = useState(60);
+
+  const { state, status, trail, predicted, stats, start, pause, reset, stepOnce } =
+    useSimulation(params);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen flex flex-col bg-background">
+      <SimulatorHeader />
+      <main className="container flex-1 py-4 grid gap-4 lg:grid-cols-[340px_1fr]">
+        <aside className="lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-1">
+          <ControlPanel
+            params={params}
+            setParams={setParams}
+            status={status}
+            onStart={start}
+            onPause={pause}
+            onReset={reset}
+            onStep={stepOnce}
+            showGrid={showGrid}
+            showVectors={showVectors}
+            showTrail={showTrail}
+            targetMode={targetMode}
+            targetX={targetX}
+            setShowGrid={setShowGrid}
+            setShowVectors={setShowVectors}
+            setShowTrail={setShowTrail}
+            setTargetMode={setTargetMode}
+            setTargetX={setTargetX}
+          />
+        </aside>
+        <section className="relative min-h-[60vh] lg:min-h-[calc(100vh-100px)]">
+          <SimulationCanvas
+            params={params}
+            state={state}
+            trail={trail}
+            predicted={predicted}
+            stats={stats}
+            showGrid={showGrid}
+            showVectors={showVectors}
+            showTrail={showTrail}
+            targetMode={targetMode}
+            targetX={targetX}
+            onTargetDrag={setTargetX}
+          />
+          <StatsHUD
+            state={state}
+            status={status}
+            range={stats.range}
+            maxHeight={stats.maxHeight}
+            flightTime={stats.flightTime}
+            targetMode={targetMode}
+            targetX={targetMode ? targetX : null}
+          />
+        </section>
+      </main>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
