@@ -1,10 +1,23 @@
 /**
- * Physics engine for projectile motion.
- * - Analytic equations when drag is OFF.
- * - Semi-implicit Euler integration when drag is ON.
+ * Simulation engine for projectile motion (animation only).
+ *
+ * Responsibilities:
+ *   - Define the shared `ProjectileParams` shape (used by UI + analytic module).
+ *   - Provide step-based integrators used by the animation loop:
+ *       • `analyticStateAt` — exact closed-form state at time t (drag OFF tick).
+ *       • `step`            — semi-implicit Euler tick (drag ON).
+ *       • `simulateFullTrajectory` — full-path preview when drag is ON.
+ *
+ * NOT in this file: closed-form summary stats (range, max height, flight time)
+ * or path sampling for the predicted dashed parabola. Those live in
+ * `src/lib/analyticPhysics.ts` — the single source of truth for analytical math.
+ *
+ * Gravity convention: g is a POSITIVE scalar (default 9.8 m/s²), subtracted in
+ * the equations (matches `analyticPhysics.ts`).
  *
  * World coordinates: x → right (m), y → up (m). Ground is y = 0.
  */
+import { computeAnalyticStats } from "./analyticPhysics";
 
 export type AngleUnit = "deg" | "rad";
 

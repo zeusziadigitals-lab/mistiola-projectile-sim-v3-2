@@ -1,20 +1,29 @@
 /**
  * analyticPhysics.ts
  *
- * Exact, formula-based projectile motion results for the case where the
- * launch and landing heights are equal (h = 0). No simulation, no drag.
+ * EXACT, formula-based projectile motion. No simulation, no integration.
+ * This file is the single source of truth for analytical answers — no other
+ * file in the project should re-derive these formulas.
  *
- * Formulas:
- *   Vx            = Vi * cos(θ)
- *   Vy            = Vi * sin(θ)
- *   timeOfFlight  = (2 * Vy) / g
- *   maxHeight     = Vy² / (2g)
- *   range         = Vx * timeOfFlight
+ * Gravity convention (project-wide): g is a POSITIVE scalar (default 9.8 m/s²).
+ * It is subtracted in the kinematic equations (y = h + Vy·t − ½g·t²).
  *
- * Conventions:
- *   - gravity g = 9.8 m/s² (positive scalar)
- *   - angle is provided in DEGREES and converted to radians internally
+ * Coordinate convention: x → right (m), y → up (m). Ground is y = 0.
+ *
+ * Formulas (h = 0 case used by computeAnalyticProjectile):
+ *   Vx           = Vi · cos(θ)
+ *   Vy           = Vi · sin(θ)
+ *   timeOfFlight = (2 · Vy) / g
+ *   maxHeight    = Vy² / (2g)
+ *   range        = Vx · timeOfFlight
+ *
+ * Generalized (h ≥ 0 case used by computeAnalyticStats / sampleAnalyticPath):
+ *   timeOfFlight = (Vy + √(Vy² + 2·g·h)) / g
+ *   apexTime     = max(0, Vy / g)
+ *   apexY        = h + Vy·tApex − ½g·tApex²
  */
+
+import type { ProjectileParams } from "./physics";
 
 export const GRAVITY = 9.8;
 
@@ -28,31 +37,43 @@ export interface AnalyticInput {
 }
 
 export interface AnalyticResult {
-  /** Horizontal velocity component Vx (m/s) */
   vx: number;
-  /** Vertical velocity component Vy (m/s) */
   vy: number;
-  /** Total time the projectile spends in the air (s) */
   timeOfFlight: number;
-  /** Peak vertical height reached above launch level (m) */
   maxHeight: number;
-  /** Horizontal distance traveled before landing (m) */
   range: number;
-  /** Echo of the gravity used in the calculation (m/s²) */
   gravity: number;
 }
 
-const degToRad = (deg: number): number => (deg * Math.PI) / 180;
+export interface AnalyticStats {
+  range: number;
+  maxHeight: number;
+  flightTime: number;
+  apex: { x: number; y: number };
+  landing: { x: number; y: number };
+}
 
+const degToRad = (deg: number): number => (deg * Math.PI) / 180;
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
 /**
- * Compute exact projectile motion results.
- *
- * @param input              { initialVelocity, angleDegrees, gravity? }
- * @param roundToTwoDecimals If true, every numeric field in the result is
- *                           rounded to 2 decimal places (display-friendly).
- *                           Defaults to false (full precision).
+ * Adapter: turn the shared `ProjectileParams` (used by both UI and simulation)
+ * into the analytic-input shape. Centralizes the deg/rad conversion so callers
+ * never duplicate it.
+ */
+export function paramsToAnalyticInput(p: ProjectileParams): AnalyticInput {
+  const angleDegrees =
+    p.angleUnit === "rad" ? (p.angleDeg * 180) / Math.PI : p.angleDeg;
+  return {
+    initialVelocity: p.v0,
+    angleDegrees,
+    gravity: p.gravity,
+  };
+}
+
+/**
+ * Compute exact projectile motion results assuming launch and landing heights
+ * are equal (h = 0).
  */
 export function computeAnalyticProjectile(
   input: AnalyticInput,
@@ -69,17 +90,8 @@ export function computeAnalyticProjectile(
   const maxHeight = (vy * vy) / (2 * g);
   const range = vx * timeOfFlight;
 
-  const result: AnalyticResult = {
-    vx,
-    vy,
-    timeOfFlight,
-    maxHeight,
-    range,
-    gravity: g,
-  };
-
+  const result: AnalyticResult = { vx, vy, timeOfFlight, maxHeight, range, gravity: g };
   if (!roundToTwoDecimals) return result;
-
   return {
     vx: round2(result.vx),
     vy: round2(result.vy),
@@ -88,4 +100,51 @@ export function computeAnalyticProjectile(
     range: round2(result.range),
     gravity: round2(result.gravity),
   };
+}
+
+/**
+ * Full analytic stats supporting non-zero launch height. Used for canvas
+ * auto-scaling, the apex marker, and the predicted landing tick.
+ */
+export function computeAnalyticStats(p: ProjectileParams): AnalyticStats {
+  const { initialVelocity: vi, angleDegrees } = paramsToAnalyticInput(p);
+  const g = p.gravity;
+  const h = Math.max(0, p.height);
+  const theta = degToRad(angleDegrees);
+  const vx = vi * Math.cos(theta);
+  const vy = vi * Math.sin(theta);
+
+  const flightTime = (vy + Math.sqrt(vy * vy + 2 * g * h)) / g;
+  const range = vx * flightTime;
+  const tApex = Math.max(0, vy / g);
+  const apexY = h + vy * tApex - 0.5 * g * tApex * tApex;
+  const apexX = vx * tApex;
+
+  return {
+    range,
+    maxHeight: Math.max(h, apexY),
+    flightTime,
+    apex: { x: apexX, y: apexY },
+    landing: { x: range, y: 0 },
+  };
+}
+
+/** Sample the analytic trajectory (drag OFF) for the dashed predicted path. */
+export function sampleAnalyticPath(
+  p: ProjectileParams,
+  samples = 80,
+): { x: number; y: number }[] {
+  const stats = computeAnalyticStats(p);
+  const { initialVelocity: vi, angleDegrees } = paramsToAnalyticInput(p);
+  const theta = degToRad(angleDegrees);
+  const vx = vi * Math.cos(theta);
+  const vy = vi * Math.sin(theta);
+  const pts: { x: number; y: number }[] = [];
+  for (let i = 0; i <= samples; i++) {
+    const t = (i / samples) * stats.flightTime;
+    const x = vx * t;
+    const y = p.height + vy * t - 0.5 * p.gravity * t * t;
+    pts.push({ x, y: Math.max(0, y) });
+  }
+  return pts;
 }
