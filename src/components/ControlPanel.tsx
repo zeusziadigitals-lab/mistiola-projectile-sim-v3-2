@@ -41,9 +41,14 @@ interface FieldProps {
   onChange: (v: number) => void;
 }
 
+// Snap any incoming numeric value to 2 decimals so inputs match what a
+// student would write on paper. This is the SAME value used in calculations,
+// guaranteeing displayed inputs and computed results stay consistent.
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 const Field = ({ label, value, min, max, step, unit, onChange }: FieldProps) => {
-  // Display value is rounded to 2 decimals; underlying value remains full precision for calculations.
-  const display = Number.isFinite(value) ? Number(value.toFixed(2)) : 0;
+  const display = Number.isFinite(value) ? round2(value) : 0;
+  const emit = (v: number) => onChange(round2(Math.max(min, Math.min(max, v))));
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between gap-2">
@@ -57,7 +62,7 @@ const Field = ({ label, value, min, max, step, unit, onChange }: FieldProps) => 
             step={step}
             onChange={(e) => {
               const v = parseFloat(e.target.value);
-              if (!Number.isNaN(v)) onChange(Math.max(min, Math.min(max, v)));
+              if (!Number.isNaN(v)) emit(v);
             }}
             className="h-6 w-20 px-1.5 py-0 text-right text-[11px]"
           />
@@ -65,11 +70,11 @@ const Field = ({ label, value, min, max, step, unit, onChange }: FieldProps) => 
         </div>
       </div>
       <Slider
-        value={[value]}
+        value={[display]}
         min={min}
         max={max}
         step={step}
-        onValueChange={(v) => onChange(v[0])}
+        onValueChange={(v) => emit(v[0])}
       />
     </div>
   );
