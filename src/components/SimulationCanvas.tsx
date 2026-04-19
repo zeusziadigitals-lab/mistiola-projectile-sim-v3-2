@@ -563,7 +563,7 @@ function drawCannon(
   // Angle label
   ctx.fillStyle = "hsl(0 0% 100% / 0.95)";
   ctx.font = "bold 11px ui-sans-serif, system-ui";
-  ctx.fillText(`${angleDeg.toFixed(0)}°`, baseX + 22, pivotY - 16);
+  ctx.fillText(`${((angleRad * 180) / Math.PI).toFixed(0)}°`, baseX + 22, pivotY - 16);
 }
 
 function roundRect(
