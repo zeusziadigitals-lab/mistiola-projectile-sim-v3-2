@@ -24,18 +24,31 @@ const Index = () => {
   const [targetMode, setTargetMode] = useState(false);
   const [targetX, setTargetX] = useState(60);
 
-  const { state, status, trail, predicted, stats, start, pause, reset, stepOnce } =
-    useSimulation(params);
+  const {
+    state,
+    status,
+    trail,
+    predicted,
+    stats,
+    timeScale,
+    setTimeScale,
+    start,
+    pause,
+    reset,
+    stepOnce,
+  } = useSimulation(params);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       <SimulatorHeader />
-      <main className="container flex-1 py-4 grid gap-4 lg:grid-cols-[340px_1fr]">
-        <aside className="lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-1">
+      <main className="flex-1 min-h-0 px-3 py-3 grid gap-3 lg:grid-cols-[300px_1fr]">
+        <aside className="min-h-0 lg:overflow-y-auto lg:pr-1">
           <ControlPanel
             params={params}
             setParams={setParams}
             status={status}
+            timeScale={timeScale}
+            setTimeScale={setTimeScale}
             onStart={start}
             onPause={pause}
             onReset={reset}
@@ -52,7 +65,7 @@ const Index = () => {
             setTargetX={setTargetX}
           />
         </aside>
-        <section className="relative h-[70vh] lg:h-[calc(100vh-100px)] min-h-[420px]">
+        <section className="relative min-h-[420px] h-[68vh] lg:h-auto">
           <SimulationCanvas
             params={params}
             state={state}
