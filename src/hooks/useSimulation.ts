@@ -90,6 +90,7 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
       s = step(s, paramsRef.current, dt / SUBSTEPS);
       if (s.landed) break;
     }
+    if (Math.random() < 0.04) console.log("[sim]", { dt: dt.toFixed(4), t: s.t.toFixed(2), x: s.x.toFixed(1), y: s.y.toFixed(1), landed: s.landed });
     setState(s);
     setTrail((prev) => {
       const next = [...prev, { x: s.x, y: s.y }];
