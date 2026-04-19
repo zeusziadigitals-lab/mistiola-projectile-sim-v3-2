@@ -9,6 +9,7 @@ import { ProjectileParams } from "@/lib/physics";
 const DEFAULT_PARAMS: ProjectileParams = {
   v0: 30,
   angleDeg: 45,
+  angleUnit: "deg",
   height: 0,
   mass: 1,
   gravity: 9.8,

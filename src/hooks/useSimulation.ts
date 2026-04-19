@@ -5,7 +5,9 @@ import {
   initialState,
   step,
   analyticStats,
+  analyticStateAt,
   simulateFullTrajectory,
+  angleToRadians,
   TrajectoryStats,
 } from "@/lib/physics";
 
@@ -57,7 +59,7 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
       const s = analyticStats(params);
       setStats(s);
       const pts: { x: number; y: number }[] = [];
-      const theta = (params.angleDeg * Math.PI) / 180;
+      const theta = angleToRadians(params);
       const vx = params.v0 * Math.cos(theta);
       const vy = params.v0 * Math.sin(theta);
       const N = 80;
@@ -80,19 +82,30 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
     }
   }, [params]);
 
-  // Stable RAF tick that always reads latest refs.
+  // Time-based RAF tick.
+  // - Drag OFF: compute exact analytic state at elapsed time t (no per-frame integration drift).
+  // - Drag ON:  use semi-implicit Euler substeps from the previous state.
+  const elapsedRef = useRef(0);
   const tick = useCallback((now: number) => {
     if (lastTimeRef.current == null) lastTimeRef.current = now;
     const rawDt = (now - lastTimeRef.current) / 1000;
     lastTimeRef.current = now;
     const dt = Math.min(rawDt, 0.05) * timeScaleRef.current;
-    const SUBSTEPS = 4;
-    let s = stateRef.current;
-    for (let i = 0; i < SUBSTEPS; i++) {
-      s = step(s, paramsRef.current, dt / SUBSTEPS);
-      if (s.landed) break;
+    elapsedRef.current += dt;
+
+    const p = paramsRef.current;
+    let s: State;
+    if (!p.dragEnabled) {
+      s = analyticStateAt(p, elapsedRef.current);
+    } else {
+      const SUBSTEPS = 4;
+      s = stateRef.current;
+      for (let i = 0; i < SUBSTEPS; i++) {
+        s = step(s, p, dt / SUBSTEPS);
+        if (s.landed) break;
+      }
     }
-    stateRef.current = s; // keep ref synced before next frame
+    stateRef.current = s;
     setState(s);
     setTrail((prev) => {
       const next = prev.length > 1200 ? prev.slice(-1200) : [...prev];

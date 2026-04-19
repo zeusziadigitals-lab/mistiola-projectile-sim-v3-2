@@ -8,10 +8,10 @@ export interface Preset {
 }
 
 export const PRESETS: Preset[] = [
-  { id: "cannon", label: "🎯 Cannon", params: { v0: 80, angleDeg: 45, height: 0, mass: 10, gravity: 9.8, dragEnabled: false } },
-  { id: "basketball", label: "🏀 Basketball Shot", params: { v0: 8, angleDeg: 55, height: 2, mass: 0.6, gravity: 9.8, dragEnabled: false } },
-  { id: "soccer", label: "⚽ Soccer Kick", params: { v0: 25, angleDeg: 30, height: 0, mass: 0.45, gravity: 9.8, dragEnabled: true, dragCoefficient: 0.05 } },
-  { id: "rocket", label: "🚀 Rocket-ish", params: { v0: 100, angleDeg: 70, height: 0, mass: 5, gravity: 9.8, dragEnabled: false } },
+  { id: "cannon", label: "🎯 Cannon", params: { v0: 80, angleDeg: 45, angleUnit: "deg", height: 0, mass: 10, gravity: 9.8, dragEnabled: false } },
+  { id: "basketball", label: "🏀 Basketball Shot", params: { v0: 8, angleDeg: 55, angleUnit: "deg", height: 2, mass: 0.6, gravity: 9.8, dragEnabled: false } },
+  { id: "soccer", label: "⚽ Soccer Kick", params: { v0: 25, angleDeg: 30, angleUnit: "deg", height: 0, mass: 0.45, gravity: 9.8, dragEnabled: true, dragCoefficient: 0.05 } },
+  { id: "rocket", label: "🚀 Rocket-ish", params: { v0: 100, angleDeg: 70, angleUnit: "deg", height: 0, mass: 5, gravity: 9.8, dragEnabled: false } },
 ];
 
 interface Props {
