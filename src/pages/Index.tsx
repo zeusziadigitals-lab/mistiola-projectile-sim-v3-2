@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { SimulatorHeader } from "@/components/SimulatorHeader";
 import { ControlPanel } from "@/components/ControlPanel";
 import { SimulationCanvas } from "@/components/SimulationCanvas";
 import { StatsHUD } from "@/components/StatsHUD";
 import { useSimulation } from "@/hooks/useSimulation";
 import { ProjectileParams } from "@/lib/physics";
+import { computeAnalyticProjectile } from "@/lib/analyticPhysics";
 
 const DEFAULT_PARAMS: ProjectileParams = {
   v0: 30,
@@ -38,6 +39,18 @@ const Index = () => {
     reset,
     stepOnce,
   } = useSimulation(params);
+
+  // Authoritative displayed stats come ONLY from analyticPhysics.ts.
+  // The simulation hook is used purely for visualization (animation, trail, predicted path).
+  // analyticPhysics expects degrees — convert if the user picked radians.
+  const analytic = useMemo(() => {
+    const angleDegrees =
+      params.angleUnit === "rad" ? (params.angleDeg * 180) / Math.PI : params.angleDeg;
+    return computeAnalyticProjectile(
+      { initialVelocity: params.v0, angleDegrees, gravity: params.gravity },
+      false,
+    );
+  }, [params.v0, params.angleDeg, params.angleUnit, params.gravity]);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
@@ -84,9 +97,9 @@ const Index = () => {
             params={params}
             state={state}
             status={status}
-            range={stats.range}
-            maxHeight={stats.maxHeight}
-            flightTime={stats.flightTime}
+            range={analytic.range}
+            maxHeight={analytic.maxHeight}
+            flightTime={analytic.timeOfFlight}
             targetMode={targetMode}
             targetX={targetMode ? targetX : null}
           />
