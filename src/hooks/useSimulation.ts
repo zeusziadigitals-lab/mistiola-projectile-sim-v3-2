@@ -108,6 +108,7 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
   }, []);
 
   const start = useCallback(() => {
+    console.log("[sim] start called, status=", status);
     if (status === "running") return;
     if (status === "landed" || status === "idle") {
       setState(initialState(paramsRef.current));
@@ -116,6 +117,7 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
     setStatus("running");
     lastTimeRef.current = null;
     rafRef.current = requestAnimationFrame(tick);
+    console.log("[sim] RAF scheduled id=", rafRef.current);
   }, [status, tick]);
 
   const pause = useCallback(() => {
