@@ -386,21 +386,28 @@ export const SimulationCanvas = ({
       ctx.fillText(`${flags.targetX.toFixed(1)} m`, tx - 18, ty + 26);
     }
 
-    // Trail (solid, after launch)
+    // Trail (solid neon line, after launch) — drawn with glow underlay
     if (flags.showTrail && trail.length > 1) {
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
+      // Glow underlay
+      ctx.strokeStyle = hsl("--trajectory", 0.35);
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(toX(trail[0].x), toY(trail[0].y));
       for (let i = 1; i < trail.length; i++) {
-        const a = trail[i - 1];
-        const b = trail[i];
-        const alpha = i / trail.length;
-        ctx.strokeStyle = hsl("--trajectory", 0.3 + 0.7 * alpha);
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.moveTo(toX(a.x), toY(a.y));
-        ctx.lineTo(toX(b.x), toY(b.y));
-        ctx.stroke();
+        ctx.lineTo(toX(trail[i].x), toY(trail[i].y));
       }
+      ctx.stroke();
+      // Bright core
+      ctx.strokeStyle = hsl("--trajectory", 1);
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(toX(trail[0].x), toY(trail[0].y));
+      for (let i = 1; i < trail.length; i++) {
+        ctx.lineTo(toX(trail[i].x), toY(trail[i].y));
+      }
+      ctx.stroke();
     }
 
     // Projectile (cannonball)
