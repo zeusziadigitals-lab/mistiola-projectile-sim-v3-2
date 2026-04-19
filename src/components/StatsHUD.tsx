@@ -30,7 +30,8 @@ export const StatsHUD = ({ state, status, range, maxHeight, flightTime, targetMo
       >
         <div className="space-y-1">
           <Row label="Time" value={`${fmt(state.t)} s`} />
-          <Row label="Position" value={`(${fmt(state.x, 1)}, ${fmt(state.y, 1)}) m`} />
+          <Row label="x" value={`${fmt(state.x)} m`} />
+          <Row label="y" value={`${fmt(state.y)} m`} />
           <Row label="vₓ" value={`${fmt(state.vx)} m/s`} accent="text-sim-vectorX" />
           <Row label="vᵧ" value={`${fmt(state.vy)} m/s`} accent="text-sim-vectorY" />
           <Row label="|v|" value={`${fmt(speed)} m/s`} />
