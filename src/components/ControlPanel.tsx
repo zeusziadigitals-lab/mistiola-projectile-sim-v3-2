@@ -41,35 +41,39 @@ interface FieldProps {
   onChange: (v: number) => void;
 }
 
-const Field = ({ label, value, min, max, step, unit, onChange }: FieldProps) => (
-  <div className="space-y-1">
-    <div className="flex items-center justify-between gap-2">
-      <Label className="text-[11px] font-medium">{label}</Label>
-      <div className="flex items-center gap-1">
-        <Input
-          type="number"
-          value={Number.isFinite(value) ? value : 0}
-          min={min}
-          max={max}
-          step={step}
-          onChange={(e) => {
-            const v = parseFloat(e.target.value);
-            if (!Number.isNaN(v)) onChange(Math.max(min, Math.min(max, v)));
-          }}
-          className="h-6 w-16 px-1.5 py-0 text-right text-[11px]"
-        />
-        <span className="text-[10px] text-muted-foreground w-7">{unit}</span>
+const Field = ({ label, value, min, max, step, unit, onChange }: FieldProps) => {
+  // Display value is rounded to 2 decimals; underlying value remains full precision for calculations.
+  const display = Number.isFinite(value) ? Number(value.toFixed(2)) : 0;
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-[11px] font-medium">{label}</Label>
+        <div className="flex items-center gap-1">
+          <Input
+            type="number"
+            value={display}
+            min={min}
+            max={max}
+            step={step}
+            onChange={(e) => {
+              const v = parseFloat(e.target.value);
+              if (!Number.isNaN(v)) onChange(Math.max(min, Math.min(max, v)));
+            }}
+            className="h-6 w-20 px-1.5 py-0 text-right text-[11px]"
+          />
+          <span className="text-[10px] text-muted-foreground w-7">{unit}</span>
+        </div>
       </div>
+      <Slider
+        value={[value]}
+        min={min}
+        max={max}
+        step={step}
+        onValueChange={(v) => onChange(v[0])}
+      />
     </div>
-    <Slider
-      value={[value]}
-      min={min}
-      max={max}
-      step={step}
-      onValueChange={(v) => onChange(v[0])}
-    />
-  </div>
-);
+  );
+};
 
 const SPEED_OPTIONS = [
   { v: 0.25, label: "0.25×" },
@@ -155,11 +159,45 @@ export const ControlPanel = ({
       </div>
 
       <div className="space-y-2.5">
-        <Field label="Initial Velocity" value={params.v0} min={0} max={100} step={1} unit="m/s" onChange={(v) => update("v0", v)} />
-        <Field label="Launch Angle" value={params.angleDeg} min={0} max={90} step={1} unit="°" onChange={(v) => update("angleDeg", v)} />
-        <Field label="Initial Height" value={params.height} min={0} max={50} step={0.5} unit="m" onChange={(v) => update("height", v)} />
-        <Field label="Mass" value={params.mass} min={0.1} max={50} step={0.1} unit="kg" onChange={(v) => update("mass", v)} />
-        <Field label="Gravity" value={params.gravity} min={1} max={25} step={0.1} unit="m/s²" onChange={(v) => update("gravity", v)} />
+        <Field label="Initial Velocity" value={params.v0} min={0} max={100} step={0.01} unit="m/s" onChange={(v) => update("v0", v)} />
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Angle Unit</Label>
+            <div className="flex gap-1">
+              {(["deg", "rad"] as const).map((u) => (
+                <Button
+                  key={u}
+                  size="sm"
+                  variant={params.angleUnit === u ? "default" : "outline"}
+                  className="h-6 px-2 text-[10px]"
+                  onClick={() => {
+                    if (params.angleUnit === u) return;
+                    // Convert the stored angle so the physical launch angle is preserved.
+                    const converted =
+                      u === "rad"
+                        ? (params.angleDeg * Math.PI) / 180
+                        : (params.angleDeg * 180) / Math.PI;
+                    setParams({ ...params, angleUnit: u, angleDeg: Number(converted.toFixed(4)) });
+                  }}
+                >
+                  {u === "deg" ? "Degrees" : "Radians"}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <Field
+            label={params.angleUnit === "deg" ? "Launch Angle" : "Launch Angle"}
+            value={params.angleDeg}
+            min={0}
+            max={params.angleUnit === "deg" ? 90 : Number((Math.PI / 2).toFixed(4))}
+            step={0.01}
+            unit={params.angleUnit === "deg" ? "°" : "rad"}
+            onChange={(v) => update("angleDeg", v)}
+          />
+        </div>
+        <Field label="Initial Height" value={params.height} min={0} max={50} step={0.01} unit="m" onChange={(v) => update("height", v)} />
+        <Field label="Mass" value={params.mass} min={0.1} max={50} step={0.01} unit="kg" onChange={(v) => update("mass", v)} />
+        <Field label="Gravity" value={params.gravity} min={1} max={25} step={0.01} unit="m/s²" onChange={(v) => update("gravity", v)} />
         {params.dragEnabled && (
           <Field label="Drag Coefficient" value={params.dragCoefficient} min={0} max={1} step={0.01} unit="N·s/m" onChange={(v) => update("dragCoefficient", v)} />
         )}
