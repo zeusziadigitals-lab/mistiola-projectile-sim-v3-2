@@ -74,13 +74,12 @@ export function step(state: State, p: ProjectileParams, dt: number): State {
   t += dt;
 
   let landed = false;
-  // Only consider "landed" if the projectile has actually been above the
-  // ground at some point (vy > 0 at start) or is now strictly below it.
-  // This prevents a ground-launch (h=0) from being flagged as landed on
-  // the very first tick when dt is effectively 0.
-  const wasAirborne = state.y > 0 || state.vy > 0 || state.t > 0;
-  if (wasAirborne && y <= 0) {
-    // Linear interpolate to find ground crossing for nicer landing
+  // Land only when the projectile actually crosses the ground.
+  // - Strictly below ground (y < 0), OR
+  // - Was above ground (state.y > 0) and now at/below it.
+  // This prevents a ground-launch (h=0) from being flagged as landed
+  // on the very first tick when dt is effectively 0.
+  if (y < 0 || (state.y > 0 && y <= 0)) {
     const prevY = state.y;
     const denom = prevY - y;
     const frac = denom > 1e-9 ? prevY / denom : 1;
