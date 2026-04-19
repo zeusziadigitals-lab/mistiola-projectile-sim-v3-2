@@ -39,6 +39,9 @@ export const StatsHUD = ({ params, state, status, range, maxHeight, flightTime, 
           <Row label="y" value={`${fmt(state.y)} m`} />
           <Row label="vₓ" value={`${fmt(state.vx)} m/s`} accent="text-sim-vectorX" />
           <Row label="vᵧ" value={`${fmt(state.vy)} m/s`} accent="text-sim-vectorY" />
+          <div className="text-[9px] text-muted-foreground italic leading-tight">
+            vᵧ sign: + up, − down (gravity)
+          </div>
           <Row label="|v|" value={`${fmt(speed)} m/s`} />
           <div className="mt-1 pt-1 border-t border-border/50 space-y-1">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Trig (launch θ)</div>
