@@ -5,7 +5,10 @@ import { SimulationCanvas } from "@/components/SimulationCanvas";
 import { StatsHUD } from "@/components/StatsHUD";
 import { useSimulation } from "@/hooks/useSimulation";
 import { ProjectileParams } from "@/lib/physics";
-import { computeAnalyticProjectile } from "@/lib/analyticPhysics";
+import {
+  computeAnalyticProjectile,
+  paramsToAnalyticInput,
+} from "@/lib/analyticPhysics";
 
 const DEFAULT_PARAMS: ProjectileParams = {
   v0: 30,
@@ -18,6 +21,8 @@ const DEFAULT_PARAMS: ProjectileParams = {
   dragCoefficient: 0.05,
 };
 
+type DisplayMode = "educational" | "physics";
+
 const Index = () => {
   const [params, setParams] = useState<ProjectileParams>(DEFAULT_PARAMS);
   const [showGrid, setShowGrid] = useState(true);
@@ -25,6 +30,7 @@ const Index = () => {
   const [showTrail, setShowTrail] = useState(true);
   const [targetMode, setTargetMode] = useState(false);
   const [targetX, setTargetX] = useState(60);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>("educational");
 
   const {
     state,
@@ -42,15 +48,15 @@ const Index = () => {
 
   // Authoritative displayed stats come ONLY from analyticPhysics.ts.
   // The simulation hook is used purely for visualization (animation, trail, predicted path).
-  // analyticPhysics expects degrees — convert if the user picked radians.
-  const analytic = useMemo(() => {
-    const angleDegrees =
-      params.angleUnit === "rad" ? (params.angleDeg * 180) / Math.PI : params.angleDeg;
-    return computeAnalyticProjectile(
-      { initialVelocity: params.v0, angleDegrees, gravity: params.gravity },
-      false,
-    );
-  }, [params.v0, params.angleDeg, params.angleUnit, params.gravity]);
+  // Educational mode pre-rounds the result to 2 dp; Physics mode keeps full precision.
+  const analytic = useMemo(
+    () =>
+      computeAnalyticProjectile(
+        paramsToAnalyticInput(params),
+        displayMode === "educational",
+      ),
+    [params, displayMode],
+  );
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
@@ -77,6 +83,8 @@ const Index = () => {
             setShowTrail={setShowTrail}
             setTargetMode={setTargetMode}
             setTargetX={setTargetX}
+            displayMode={displayMode}
+            setDisplayMode={setDisplayMode}
           />
         </aside>
         <section className="relative min-h-[420px] h-[68vh] lg:h-auto">
@@ -102,6 +110,7 @@ const Index = () => {
             flightTime={analytic.timeOfFlight}
             targetMode={targetMode}
             targetX={targetMode ? targetX : null}
+            displayMode={displayMode}
           />
         </section>
       </main>

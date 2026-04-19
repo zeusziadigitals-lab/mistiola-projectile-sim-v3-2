@@ -1,10 +1,23 @@
 /**
- * Physics engine for projectile motion.
- * - Analytic equations when drag is OFF.
- * - Semi-implicit Euler integration when drag is ON.
+ * Simulation engine for projectile motion (animation only).
+ *
+ * Responsibilities:
+ *   - Define the shared `ProjectileParams` shape (used by UI + analytic module).
+ *   - Provide step-based integrators used by the animation loop:
+ *       • `analyticStateAt` — exact closed-form state at time t (drag OFF tick).
+ *       • `step`            — semi-implicit Euler tick (drag ON).
+ *       • `simulateFullTrajectory` — full-path preview when drag is ON.
+ *
+ * NOT in this file: closed-form summary stats (range, max height, flight time)
+ * or path sampling for the predicted dashed parabola. Those live in
+ * `src/lib/analyticPhysics.ts` — the single source of truth for analytical math.
+ *
+ * Gravity convention: g is a POSITIVE scalar (default 9.8 m/s²), subtracted in
+ * the equations (matches `analyticPhysics.ts`).
  *
  * World coordinates: x → right (m), y → up (m). Ground is y = 0.
  */
+import { computeAnalyticStats } from "./analyticPhysics";
 
 export type AngleUnit = "deg" | "rad";
 
@@ -61,7 +74,7 @@ export function analyticStateAt(p: ProjectileParams, t: number): State {
   const theta = angleToRadians(p);
   const vx0 = p.v0 * Math.cos(theta);
   const vy0 = p.v0 * Math.sin(theta);
-  const stats = analyticStats(p);
+  const stats = computeAnalyticStats(p);
   const tf = stats.flightTime;
   const tc = Math.min(Math.max(0, t), tf);
   const x = vx0 * tc;
@@ -117,45 +130,9 @@ export function step(state: State, p: ProjectileParams, dt: number): State {
   return { t, x, y, vx, vy, landed };
 }
 
-/**
- * Compute analytic stats (drag OFF) for the predicted trajectory.
- * Used to draw the dashed predicted path and to auto-scale the canvas.
- */
-export function analyticStats(p: ProjectileParams): TrajectoryStats {
-  const theta = angleToRadians(p);
-  const vx = p.v0 * Math.cos(theta);
-  const vy = p.v0 * Math.sin(theta);
-  const g = p.gravity;
-  // y(t) = h + vy*t - 0.5*g*t^2 = 0 → t = (vy + sqrt(vy^2 + 2*g*h)) / g
-  const flightTime = (vy + Math.sqrt(vy * vy + 2 * g * Math.max(0, p.height))) / g;
-  const range = vx * flightTime;
-  const tApex = Math.max(0, vy / g);
-  const apexY = p.height + vy * tApex - 0.5 * g * tApex * tApex;
-  const apexX = vx * tApex;
-  return {
-    range,
-    maxHeight: Math.max(p.height, apexY),
-    flightTime,
-    apex: { x: apexX, y: apexY },
-    landing: { x: range, y: 0 },
-  };
-}
-
-/** Sample the predicted trajectory (drag OFF) for path preview. */
-export function sampleAnalyticPath(p: ProjectileParams, samples = 80): { x: number; y: number }[] {
-  const stats = analyticStats(p);
-  const pts: { x: number; y: number }[] = [];
-  const theta = angleToRadians(p);
-  const vx = p.v0 * Math.cos(theta);
-  const vy = p.v0 * Math.sin(theta);
-  for (let i = 0; i <= samples; i++) {
-    const t = (i / samples) * stats.flightTime;
-    const x = vx * t;
-    const y = p.height + vy * t - 0.5 * p.gravity * t * t;
-    pts.push({ x, y: Math.max(0, y) });
-  }
-  return pts;
-}
+// NOTE: Closed-form analytic stats (`computeAnalyticStats`) and dashed-path
+// sampling (`sampleAnalyticPath`) live in `src/lib/analyticPhysics.ts`.
+// Do not re-derive them here.
 
 /** Simulate full trajectory (with drag) by stepping until landing. Used for preview when drag is ON. */
 export function simulateFullTrajectory(
