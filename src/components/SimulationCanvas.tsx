@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ProjectileParams, State, TrajectoryStats } from "@/lib/physics";
+import { ProjectileParams, State, TrajectoryStats, angleToRadians } from "@/lib/physics";
 
 interface Props {
   params: ProjectileParams;
@@ -356,7 +356,7 @@ export const SimulationCanvas = ({
     }
 
     // Cannon at origin (PhET-style)
-    drawCannon(ctx, toX(0), toY(0), toY(params.height), params.angleDeg, scale);
+    drawCannon(ctx, toX(0), toY(0), toY(params.height), angleToRadians(params), scale);
 
     // Target (bullseye)
     if (flags.targetMode) {
@@ -501,7 +501,7 @@ function drawCannon(
   baseX: number,
   baseY: number,
   muzzleY: number,
-  angleDeg: number,
+  angleRad: number,
   scale: number,
 ) {
   // Wheels / base sit on ground (baseY). Barrel pivots at platform top (muzzleY if elevated).
@@ -509,7 +509,7 @@ function drawCannon(
   const pivotY = muzzleY;
   const barrelLen = 38;
   const barrelW = 14;
-  const ang = -(angleDeg * Math.PI) / 180;
+  const ang = -angleRad;
 
   // Platform leg if height > 0
   if (baseY - muzzleY > 6) {
@@ -563,7 +563,7 @@ function drawCannon(
   // Angle label
   ctx.fillStyle = "hsl(0 0% 100% / 0.95)";
   ctx.font = "bold 11px ui-sans-serif, system-ui";
-  ctx.fillText(`${angleDeg.toFixed(0)}°`, baseX + 22, pivotY - 16);
+  ctx.fillText(`${((angleRad * 180) / Math.PI).toFixed(0)}°`, baseX + 22, pivotY - 16);
 }
 
 function roundRect(
