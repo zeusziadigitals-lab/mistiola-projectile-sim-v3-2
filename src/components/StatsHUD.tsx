@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { State } from "@/lib/physics";
 import { SimStatus } from "@/hooks/useSimulation";
+import { DraggableCard } from "./DraggableCard";
 
 interface Props {
   state: State;
@@ -20,41 +21,55 @@ export const StatsHUD = ({ state, status, range, maxHeight, flightTime, targetMo
   const miss = targetMode && targetX != null && status === "landed" && !hit;
 
   return (
-    <div className="pointer-events-none absolute inset-0 p-3 sm:p-4 flex flex-col gap-3">
-      {/* Live readouts */}
-      <Card className="pointer-events-auto panel-gradient w-fit p-3 text-[11px] sm:text-xs space-y-1 animate-fade-in">
-        <Row label="Time" value={`${fmt(state.t)} s`} />
-        <Row label="Position" value={`(${fmt(state.x, 1)}, ${fmt(state.y, 1)}) m`} />
-        <Row label="vₓ" value={`${fmt(state.vx)} m/s`} accent="text-sim-vectorX" />
-        <Row label="vᵧ" value={`${fmt(state.vy)} m/s`} accent="text-sim-vectorY" />
-        <Row label="|v|" value={`${fmt(speed)} m/s`} />
-      </Card>
+    <div className="pointer-events-none absolute inset-0">
+      {/* Live readouts — draggable */}
+      <DraggableCard
+        initial={{ x: 12, y: 12 }}
+        storageKey="hud-live-pos"
+        className="w-[180px] text-[11px] sm:text-xs animate-fade-in"
+      >
+        <div className="space-y-1">
+          <Row label="Time" value={`${fmt(state.t)} s`} />
+          <Row label="Position" value={`(${fmt(state.x, 1)}, ${fmt(state.y, 1)}) m`} />
+          <Row label="vₓ" value={`${fmt(state.vx)} m/s`} accent="text-sim-vectorX" />
+          <Row label="vᵧ" value={`${fmt(state.vy)} m/s`} accent="text-sim-vectorY" />
+          <Row label="|v|" value={`${fmt(speed)} m/s`} />
+        </div>
+      </DraggableCard>
 
-      <div className="flex-1" />
-
-      {/* Final stats */}
+      {/* Final stats — draggable */}
       {status === "landed" && (
-        <Card className="pointer-events-auto panel-gradient ml-auto w-fit p-3 text-[11px] sm:text-xs space-y-1 animate-scale-in">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Final Stats</div>
-          <Row label="Range" value={`${fmt(range, 2)} m`} />
-          <Row label="Max Height" value={`${fmt(maxHeight, 2)} m`} />
-          <Row label="Flight Time" value={`${fmt(flightTime, 2)} s`} />
-          {targetMode && targetX != null && (
-            <div
-              className={`mt-1 rounded px-2 py-1 text-center font-bold ${
-                hit ? "bg-sim-target/20 text-sim-target" : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {hit ? "HIT! 🎯" : `Missed by ${fmt(Math.abs(state.x - targetX), 2)} m`}
-            </div>
-          )}
-        </Card>
+        <DraggableCard
+          initial={{ x: 9999, y: 9999 }}
+          storageKey="hud-final-pos"
+          className="w-[200px] text-[11px] sm:text-xs animate-scale-in"
+        >
+          <div className="space-y-1">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Final Stats</div>
+            <Row label="Range" value={`${fmt(range, 2)} m`} />
+            <Row label="Max Height" value={`${fmt(maxHeight, 2)} m`} />
+            <Row label="Flight Time" value={`${fmt(flightTime, 2)} s`} />
+            {targetMode && targetX != null && (
+              <div
+                className={`mt-1 rounded px-2 py-1 text-center font-bold ${
+                  hit ? "bg-sim-target/20 text-sim-target" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {hit ? "HIT! 🎯" : `Missed by ${fmt(Math.abs(state.x - targetX), 2)} m`}
+              </div>
+            )}
+          </div>
+        </DraggableCard>
       )}
 
-      {miss === false && status !== "landed" && targetMode && targetX != null && (
-        <Card className="pointer-events-auto panel-gradient ml-auto w-fit p-2 text-[11px] animate-fade-in">
+      {status !== "landed" && targetMode && targetX != null && (
+        <DraggableCard
+          initial={{ x: 9999, y: 12 }}
+          storageKey="hud-target-pos"
+          className="w-[160px] text-[11px] animate-fade-in"
+        >
           🎯 Target at <span className="font-bold text-sim-target">{fmt(targetX, 1)} m</span>
-        </Card>
+        </DraggableCard>
       )}
     </div>
   );
