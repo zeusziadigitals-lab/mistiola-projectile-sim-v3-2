@@ -1,4 +1,3 @@
-import { Card } from "@/components/ui/card";
 import { ProjectileParams, State, angleToRadians } from "@/lib/physics";
 import { SimStatus } from "@/hooks/useSimulation";
 import { DraggableCard } from "./DraggableCard";
