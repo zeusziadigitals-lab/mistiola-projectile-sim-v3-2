@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { SimulatorHeader } from "@/components/SimulatorHeader";
 import { ControlPanel } from "@/components/ControlPanel";
 import { SimulationCanvas } from "@/components/SimulationCanvas";
 import { StatsHUD } from "@/components/StatsHUD";
 import { useSimulation } from "@/hooks/useSimulation";
-import { ProjectileParams } from "@/lib/physics";
+import { ProjectileParams, angleToRadians } from "@/lib/physics";
+import { computeAnalyticProjectile } from "@/lib/analyticPhysics";
 
 const DEFAULT_PARAMS: ProjectileParams = {
   v0: 30,
