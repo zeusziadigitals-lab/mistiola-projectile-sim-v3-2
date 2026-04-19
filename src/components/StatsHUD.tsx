@@ -27,8 +27,8 @@ export const StatsHUD = ({ params, state, status, range, maxHeight, flightTime, 
   const sinV = Math.sin(theta);
   const cosV = Math.cos(theta);
   const angleLabel = params.angleUnit === "rad"
-    ? `${fmt(params.angleDeg, 2)} rad`
-    : `${fmt(params.angleDeg, 2)}°`;
+    ? `${f(params.angleDeg)} rad`
+    : `${f(params.angleDeg)}°`;
   const hit = targetMode && targetX != null && status === "landed" ? Math.abs(state.x - targetX) <= 1.5 : false;
 
   return (
@@ -40,21 +40,21 @@ export const StatsHUD = ({ params, state, status, range, maxHeight, flightTime, 
         className="w-[210px] text-[11px] sm:text-xs animate-fade-in"
       >
         <div className="space-y-1">
-          <Row label="Time" value={`${fmt(state.t)} s`} />
-          <Row label="x" value={`${fmt(state.x)} m`} />
-          <Row label="y" value={`${fmt(state.y)} m`} />
-          <Row label="vₓ" value={`${fmt(state.vx)} m/s`} accent="text-sim-vectorX" />
-          <Row label="vᵧ" value={`${fmt(state.vy)} m/s`} accent="text-sim-vectorY" />
+          <Row label="Time" value={`${f(state.t)} s`} />
+          <Row label="x" value={`${f(state.x)} m`} />
+          <Row label="y" value={`${f(state.y)} m`} />
+          <Row label="vₓ" value={`${f(state.vx)} m/s`} accent="text-sim-vectorX" />
+          <Row label="vᵧ" value={`${f(state.vy)} m/s`} accent="text-sim-vectorY" />
           <div className="text-[9px] text-muted-foreground italic leading-tight">
             vᵧ sign: + up, − down (gravity)
           </div>
-          <Row label="|v|" value={`${fmt(speed)} m/s`} />
+          <Row label="|v|" value={`${f(speed)} m/s`} />
           <div className="mt-1 pt-1 border-t border-border/50 space-y-1">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Trig (launch θ)</div>
             <Row label="θ" value={angleLabel} />
-            <Row label="sin θ" value={fmt(sinV, 2)} accent="text-sim-vectorY" />
-            <Row label="cos θ" value={fmt(cosV, 2)} accent="text-sim-vectorX" />
-            <Row label="tan θ" value={Math.abs(cosV) < 1e-9 ? "—" : fmt(sinV / cosV, 2)} />
+            <Row label="sin θ" value={f(sinV)} accent="text-sim-vectorY" />
+            <Row label="cos θ" value={f(cosV)} accent="text-sim-vectorX" />
+            <Row label="tan θ" value={Math.abs(cosV) < 1e-9 ? "—" : f(sinV / cosV)} />
           </div>
         </div>
       </DraggableCard>
@@ -68,16 +68,16 @@ export const StatsHUD = ({ params, state, status, range, maxHeight, flightTime, 
         >
           <div className="space-y-1">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Final Stats</div>
-            <Row label="Range" value={`${fmt(range, 2)} m`} />
-            <Row label="Max Height" value={`${fmt(maxHeight, 2)} m`} />
-            <Row label="Flight Time" value={`${fmt(flightTime, 2)} s`} />
+            <Row label="Range" value={`${f(range)} m`} />
+            <Row label="Max Height" value={`${f(maxHeight)} m`} />
+            <Row label="Flight Time" value={`${f(flightTime)} s`} />
             {targetMode && targetX != null && (
               <div
                 className={`mt-1 rounded px-2 py-1 text-center font-bold ${
                   hit ? "bg-sim-target/20 text-sim-target" : "bg-muted text-muted-foreground"
                 }`}
               >
-                {hit ? "HIT! 🎯" : `Missed by ${fmt(Math.abs(state.x - targetX), 2)} m`}
+                {hit ? "HIT! 🎯" : `Missed by ${f(Math.abs(state.x - targetX))} m`}
               </div>
             )}
           </div>

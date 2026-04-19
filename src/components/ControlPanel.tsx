@@ -29,6 +29,8 @@ interface Props {
   setShowTrail: (b: boolean) => void;
   setTargetMode: (b: boolean) => void;
   setTargetX: (n: number) => void;
+  displayMode: "educational" | "physics";
+  setDisplayMode: (m: "educational" | "physics") => void;
 }
 
 interface FieldProps {
