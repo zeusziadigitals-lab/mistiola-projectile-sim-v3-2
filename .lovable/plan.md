@@ -1,99 +1,39 @@
 
-# Projectile Motion Simulator
 
-A modern, interactive 2D projectile motion lab inspired by PhET — with real-time canvas animation, live physics readouts, and a clean dark-mode UI.
+## Plan
 
-**Title:** "PROJECTILE MOTION SIMULATOR by SIR RENE MISTIOLA"
+**1. Reduce sin/cos/tan display to 2 decimals**
+In `src/components/StatsHUD.tsx`, change `fmt(sinV, 4)`, `fmt(cosV, 4)`, and `fmt(sinV/cosV, 4)` → `fmt(..., 2)`. The angle label for radians also uses 4 decimals — change to 2 for consistency. Calculations themselves stay at full precision; only the display rounds.
 
-## Layout
+**2. Accuracy check (already verified in code)**
+Yes — the math is correct and consistent:
+- `vx = v0·cos θ`, `vy = v0·sin θ` ✓
+- `y = h + vy·t − ½g·t²` ✓
+- Flight time `(vy + √(vy² + 2gh)) / g` ✓
+- Range `vx · t` ✓, Max height `h + vy²/(2g)` ✓
+- Drag-OFF uses analytic formulas (zero drift), drag-ON uses semi-implicit Euler.
+- Inputs snap to 2 decimals so what the student types = what is computed.
 
-Split responsive layout (stacks on mobile):
-- **Left — Control Panel** (sliders + numeric inputs + buttons)
-- **Right — Canvas Stage** (trajectory animation + live HUD)
-- **Top bar** — App title, dark/light toggle, preset selector
+**3. Explanations (Grade 7 friendly) — to write in chat reply only, no code change**
 
-## Inputs (Control Panel)
+**The Drag Window (Live Readouts floating card):**
+Think of it as the projectile's "live report card" while flying:
+- **Time** — seconds since launch (a stopwatch).
+- **x** — how far sideways it has traveled (meters).
+- **y** — how high it is right now (meters).
+- **vₓ** — sideways speed (stays the same with no air).
+- **vᵧ** — up/down speed. **Positive = going up**, **Negative = falling down**. That's why it turns negative after the top — gravity is pulling it down.
+- **|v|** — total speed (combine vₓ and vᵧ like the long side of a right triangle).
+- **Trig section (θ, sin θ, cos θ, tan θ)** — the launch angle and its trig values, which decide how much of v₀ becomes sideways vs. upward speed.
 
-Each as a slider + numeric field:
-- Initial velocity (0–100 m/s)
-- Launch angle (0–90°)
-- Initial height (0–50 m)
-- Mass (0.1–50 kg)
-- Gravity (1–25 m/s², default 9.8)
-- Drag coefficient (when air resistance ON)
-- Toggles: **Air resistance**, **Show grid/axes**, **Show velocity vectors**, **Show trail**
+You can **drag it anywhere** on the screen so it doesn't cover the projectile's path.
 
-**Buttons:** Start ▶ · Pause ⏸ · Reset ↺ · Step ⏭
+**The Cursor Toggle (Target Mode):**
+It's a "hit the target" mini-game.
+- Turn it ON → a flag appears at a chosen distance (Target X meters).
+- Adjust angle, velocity, or height to try to land the ball on the flag.
+- After landing, the HUD shows **HIT! 🎯** if within ~1.5 m, otherwise tells you how many meters you missed by.
+It teaches that small changes in angle/speed make a big difference in where things land.
 
-## Physics Engine (separate `lib/physics.ts` module)
+**Files to edit:** `src/components/StatsHUD.tsx` (4 number-format changes).
 
-- **No drag (analytic):** parametric x(t), y(t) using `vx = v·cosθ`, `vy = v·sinθ - g·t`
-- **With drag (numeric, RK4 or semi-implicit Euler):**
-  `a = -g·ĵ - (k/m)·v` where `k` scales with drag coefficient
-- Computes & exposes: time of flight, max height, range, apex point
-- Time step ~16 ms for 60 FPS via `requestAnimationFrame`
-
-## Canvas Visualization
-
-- HTML5 Canvas with devicePixelRatio scaling for crisp rendering
-- Ground line, optional grid + labeled axes (meters), auto-fit world-to-screen scaling so trajectory always fits
-- Projectile drawn as a circle with motion blur trail
-- Predicted parabolic path drawn as dashed curve (when paused/before launch)
-- Optional velocity vector arrows (vx green, vy blue, resultant white)
-- Apex marker + landing marker
-- Smooth 60 FPS animation loop
-
-## Live HUD (overlay on canvas)
-
-- Time elapsed (s)
-- Position (x, y) m
-- Velocity (vx, vy, |v|) m/s
-- Current height, distance traveled
-- Final stats card on landing: Range · Max Height · Flight Time
-
-## Preset Scenarios
-
-Dropdown buttons that load parameter sets:
-- 🎯 Cannon (v=80, θ=45°)
-- 🏀 Basketball Shot (v=8, θ=55°, h=2)
-- ⚽ Soccer Kick (v=25, θ=30°)
-- 🚀 Rocket-ish (v=100, θ=70°)
-
-## Target Mode
-
-- Toggle "Target Mode" — places a draggable target on the ground (or platform)
-- Shows "HIT! 🎯" or "Missed by X.X m" after landing
-- Optional hit-tolerance indicator
-
-## Theming & Styling
-
-- Dark-mode-first design system in `index.css` (HSL tokens): deep navy background, neon cyan/lime accents for trajectory & vectors, subtle grid lines
-- Light/dark toggle in header (persists via localStorage)
-- shadcn components: Slider, Switch, Button, Card, Select, Tooltip, Tabs
-- Smooth fade/scale animations on panel mount & stat updates
-
-## Mobile Responsiveness
-
-- Below `md`: canvas on top, collapsible control panel (Sheet/Drawer) below
-- Touch-friendly slider hit areas
-- Canvas resizes via ResizeObserver
-
-## File Structure
-
-- `src/pages/Index.tsx` — page composition
-- `src/components/SimulatorHeader.tsx`
-- `src/components/ControlPanel.tsx`
-- `src/components/SimulationCanvas.tsx`
-- `src/components/StatsHUD.tsx`
-- `src/components/PresetSelector.tsx`
-- `src/lib/physics.ts` — pure physics functions & integrators
-- `src/hooks/useSimulation.ts` — RAF loop, state, play/pause/reset
-- Update `tailwind.config.ts` & `index.css` with custom tokens, gradients, and the fade/scale animations
-
-## Acceptance
-
-- Accurate parabolic motion (verifiable against analytic formulas when drag OFF)
-- Drag ON visibly shortens range and steepens descent
-- Live updates reflect in canvas + HUD without lag
-- Works smoothly on mobile and desktop
-- Preset & target modes function as described
