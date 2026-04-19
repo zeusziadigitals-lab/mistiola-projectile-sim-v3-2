@@ -6,15 +6,22 @@
  * World coordinates: x → right (m), y → up (m). Ground is y = 0.
  */
 
+export type AngleUnit = "deg" | "rad";
+
 export interface ProjectileParams {
   v0: number;            // initial speed (m/s)
-  angleDeg: number;      // launch angle (degrees, 0–90)
+  angleDeg: number;      // launch angle stored in the user's chosen unit
+  angleUnit: AngleUnit;  // "deg" or "rad" — how to interpret angleDeg
   height: number;        // initial height (m)
   mass: number;          // mass (kg)
   gravity: number;       // gravitational acceleration (m/s^2)
   dragEnabled: boolean;
   dragCoefficient: number; // simple linear drag k (N·s/m), force = -k*v
 }
+
+/** Convert the stored angle to radians for use in sin/cos. */
+export const angleToRadians = (p: ProjectileParams): number =>
+  p.angleUnit === "rad" ? p.angleDeg : (p.angleDeg * Math.PI) / 180;
 
 export interface State {
   t: number;
