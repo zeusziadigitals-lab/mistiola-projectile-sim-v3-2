@@ -27,7 +27,7 @@ export const SimulatorHeader = () => {
               PROJECTILE MOTION SIMULATOR
             </h1>
             <p className="text-[10px] text-muted-foreground">
-              by SIR RENE MISTIOLA
+              by SIR RENE D. MISTIOLA
             </p>
           </div>
         </div>
