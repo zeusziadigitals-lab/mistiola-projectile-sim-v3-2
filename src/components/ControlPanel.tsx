@@ -109,6 +109,8 @@ export const ControlPanel = ({
   setShowTrail,
   setTargetMode,
   setTargetX,
+  displayMode,
+  setDisplayMode,
 }: Props) => {
   const update = (k: keyof ProjectileParams, v: number | boolean) =>
     setParams({ ...params, [k]: v as never });
@@ -219,6 +221,21 @@ export const ControlPanel = ({
         {targetMode && (
           <Field label="Target X" value={targetX} min={1} max={500} step={1} unit="m" onChange={setTargetX} />
         )}
+      </div>
+
+      <div className="space-y-1.5 rounded-lg border border-border/60 p-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-[11px] flex flex-col">
+            <span>Display Mode</span>
+            <span className="text-[9px] text-muted-foreground font-normal">
+              {displayMode === "educational" ? "Educational · 2 dp" : "Physics · 4 dp"}
+            </span>
+          </Label>
+          <Switch
+            checked={displayMode === "physics"}
+            onCheckedChange={(b) => setDisplayMode(b ? "physics" : "educational")}
+          />
+        </div>
       </div>
     </Card>
   );
