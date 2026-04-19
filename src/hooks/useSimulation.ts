@@ -26,20 +26,23 @@ export interface UseSimulationReturn {
 }
 
 export function useSimulation(params: ProjectileParams): UseSimulationReturn {
-  const [timeScale, setTimeScale] = useState(0.5); // slower default so animation is visible
-  const timeScaleRef = useRef(timeScale);
-  timeScaleRef.current = timeScale;
+  const [timeScale, setTimeScale] = useState(0.5);
   const [state, setState] = useState<State>(() => initialState(params));
   const [status, setStatus] = useState<SimStatus>("idle");
   const [trail, setTrail] = useState<{ x: number; y: number }[]>([]);
 
+  // Refs: kept in sync with latest values for use inside RAF loop.
   const stateRef = useRef(state);
   const paramsRef = useRef(params);
+  const statusRef = useRef(status);
+  const timeScaleRef = useRef(timeScale);
   const rafRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
 
   stateRef.current = state;
   paramsRef.current = params;
+  statusRef.current = status;
+  timeScaleRef.current = timeScale;
 
   // Predicted path + stats (recomputed when params change)
   const [predicted, setPredicted] = useState<{ x: number; y: number }[]>([]);
@@ -51,7 +54,6 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
       setPredicted(r.points);
       setStats(r.stats);
     } else {
-      // Sample analytic path
       const s = analyticStats(params);
       setStats(s);
       const pts: { x: number; y: number }[] = [];
@@ -70,19 +72,19 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
     }
   }, [params]);
 
-  // Reset state when params change while idle
+  // Reset state to initial only when params change while idle (not while running/paused/landed).
   useEffect(() => {
-    if (status === "idle") {
+    if (statusRef.current === "idle") {
       setState(initialState(params));
       setTrail([]);
     }
-  }, [params, status]);
+  }, [params]);
 
+  // Stable RAF tick that always reads latest refs.
   const tick = useCallback((now: number) => {
     if (lastTimeRef.current == null) lastTimeRef.current = now;
     const rawDt = (now - lastTimeRef.current) / 1000;
     lastTimeRef.current = now;
-    // Clamp dt and substep for stability
     const dt = Math.min(rawDt, 0.05) * timeScaleRef.current;
     const SUBSTEPS = 4;
     let s = stateRef.current;
@@ -90,15 +92,15 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
       s = step(s, paramsRef.current, dt / SUBSTEPS);
       if (s.landed) break;
     }
-    if (Math.random() < 0.04) console.log("[sim]", { dt: dt.toFixed(4), t: s.t.toFixed(2), x: s.x.toFixed(1), y: s.y.toFixed(1), landed: s.landed });
+    stateRef.current = s; // keep ref synced before next frame
     setState(s);
     setTrail((prev) => {
-      const next = [...prev, { x: s.x, y: s.y }];
-      // cap trail length to avoid runaway memory
-      if (next.length > 1200) next.splice(0, next.length - 1200);
+      const next = prev.length > 1200 ? prev.slice(-1200) : [...prev];
+      next.push({ x: s.x, y: s.y });
       return next;
     });
     if (s.landed) {
+      statusRef.current = "landed";
       setStatus("landed");
       rafRef.current = null;
       lastTimeRef.current = null;
@@ -108,45 +110,59 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
   }, []);
 
   const start = useCallback(() => {
-    console.log("[sim] start called, status=", status);
-    if (status === "running") return;
-    if (status === "landed" || status === "idle") {
-      setState(initialState(paramsRef.current));
+    if (statusRef.current === "running") return;
+    if (statusRef.current === "landed" || statusRef.current === "idle") {
+      const init = initialState(paramsRef.current);
+      stateRef.current = init;
+      setState(init);
       setTrail([]);
     }
+    statusRef.current = "running";
     setStatus("running");
     lastTimeRef.current = null;
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(tick);
-    console.log("[sim] RAF scheduled id=", rafRef.current);
-  }, [status, tick]);
+  }, [tick]);
 
   const pause = useCallback(() => {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
     lastTimeRef.current = null;
-    setStatus((prev) => (prev === "running" ? "paused" : prev));
+    if (statusRef.current === "running") {
+      statusRef.current = "paused";
+      setStatus("paused");
+    }
   }, []);
 
   const reset = useCallback(() => {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
     lastTimeRef.current = null;
-    setState(initialState(paramsRef.current));
+    const init = initialState(paramsRef.current);
+    stateRef.current = init;
+    setState(init);
     setTrail([]);
+    statusRef.current = "idle";
     setStatus("idle");
   }, []);
 
   const stepOnce = useCallback(() => {
-    if (status === "running") return;
+    if (statusRef.current === "running") return;
     let s = stateRef.current;
     if (s.landed) return;
     const dt = 0.05;
     s = step(s, paramsRef.current, dt);
+    stateRef.current = s;
     setState(s);
     setTrail((prev) => [...prev, { x: s.x, y: s.y }]);
-    if (s.landed) setStatus("landed");
-    else setStatus("paused");
-  }, [status]);
+    if (s.landed) {
+      statusRef.current = "landed";
+      setStatus("landed");
+    } else {
+      statusRef.current = "paused";
+      setStatus("paused");
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
