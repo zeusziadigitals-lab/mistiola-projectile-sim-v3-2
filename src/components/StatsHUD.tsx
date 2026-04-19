@@ -2,6 +2,8 @@ import { ProjectileParams, State, angleToRadians } from "@/lib/physics";
 import { SimStatus } from "@/hooks/useSimulation";
 import { DraggableCard } from "./DraggableCard";
 
+export type DisplayMode = "educational" | "physics";
+
 interface Props {
   params: ProjectileParams;
   state: State;
@@ -11,11 +13,15 @@ interface Props {
   flightTime: number;
   targetMode: boolean;
   targetX: number | null;
+  displayMode?: DisplayMode;
 }
 
 const fmt = (n: number, d = 2) => (Number.isFinite(n) ? n.toFixed(d) : "—");
 
-export const StatsHUD = ({ params, state, status, range, maxHeight, flightTime, targetMode, targetX }: Props) => {
+export const StatsHUD = ({ params, state, status, range, maxHeight, flightTime, targetMode, targetX, displayMode = "educational" }: Props) => {
+  // Educational mode: 2 dp everywhere. Physics mode: 4 dp for finer inspection.
+  const dp = displayMode === "educational" ? 2 : 4;
+  const f = (n: number) => fmt(n, dp);
   const speed = Math.hypot(state.vx, state.vy);
   const theta = angleToRadians(params);
   const sinV = Math.sin(theta);

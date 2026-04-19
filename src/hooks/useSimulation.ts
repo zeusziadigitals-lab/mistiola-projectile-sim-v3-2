@@ -4,12 +4,11 @@ import {
   State,
   initialState,
   step,
-  analyticStats,
   analyticStateAt,
   simulateFullTrajectory,
-  angleToRadians,
   TrajectoryStats,
 } from "@/lib/physics";
+import { computeAnalyticStats, sampleAnalyticPath } from "@/lib/analyticPhysics";
 
 export type SimStatus = "idle" | "running" | "paused" | "landed";
 
@@ -48,7 +47,7 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
 
   // Predicted path + stats (recomputed when params change)
   const [predicted, setPredicted] = useState<{ x: number; y: number }[]>([]);
-  const [stats, setStats] = useState<TrajectoryStats>(() => analyticStats(params));
+  const [stats, setStats] = useState<TrajectoryStats>(() => computeAnalyticStats(params));
 
   useEffect(() => {
     if (params.dragEnabled) {
@@ -56,21 +55,8 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
       setPredicted(r.points);
       setStats(r.stats);
     } else {
-      const s = analyticStats(params);
-      setStats(s);
-      const pts: { x: number; y: number }[] = [];
-      const theta = angleToRadians(params);
-      const vx = params.v0 * Math.cos(theta);
-      const vy = params.v0 * Math.sin(theta);
-      const N = 80;
-      for (let i = 0; i <= N; i++) {
-        const t = (i / N) * s.flightTime;
-        pts.push({
-          x: vx * t,
-          y: Math.max(0, params.height + vy * t - 0.5 * params.gravity * t * t),
-        });
-      }
-      setPredicted(pts);
+      setStats(computeAnalyticStats(params));
+      setPredicted(sampleAnalyticPath(params, 80));
     }
   }, [params]);
 
