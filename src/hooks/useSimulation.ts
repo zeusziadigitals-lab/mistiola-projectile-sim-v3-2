@@ -17,15 +17,18 @@ export interface UseSimulationReturn {
   trail: { x: number; y: number }[];
   predicted: { x: number; y: number }[];
   stats: TrajectoryStats;
+  timeScale: number;
+  setTimeScale: (s: number) => void;
   start: () => void;
   pause: () => void;
   reset: () => void;
   stepOnce: () => void;
 }
 
-const TIME_SCALE = 1; // 1 = real-time
-
 export function useSimulation(params: ProjectileParams): UseSimulationReturn {
+  const [timeScale, setTimeScale] = useState(0.5); // slower default so animation is visible
+  const timeScaleRef = useRef(timeScale);
+  timeScaleRef.current = timeScale;
   const [state, setState] = useState<State>(() => initialState(params));
   const [status, setStatus] = useState<SimStatus>("idle");
   const [trail, setTrail] = useState<{ x: number; y: number }[]>([]);
@@ -80,7 +83,7 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
     const rawDt = (now - lastTimeRef.current) / 1000;
     lastTimeRef.current = now;
     // Clamp dt and substep for stability
-    const dt = Math.min(rawDt, 0.05) * TIME_SCALE;
+    const dt = Math.min(rawDt, 0.05) * timeScaleRef.current;
     const SUBSTEPS = 4;
     let s = stateRef.current;
     for (let i = 0; i < SUBSTEPS; i++) {
@@ -148,5 +151,5 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
     };
   }, []);
 
-  return { state, status, trail, predicted, stats, start, pause, reset, stepOnce };
+  return { state, status, trail, predicted, stats, timeScale, setTimeScale, start, pause, reset, stepOnce };
 }
