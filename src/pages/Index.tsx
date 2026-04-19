@@ -81,6 +81,7 @@ const Index = () => {
             onTargetDrag={setTargetX}
           />
           <StatsHUD
+            params={params}
             state={state}
             status={status}
             range={stats.range}
