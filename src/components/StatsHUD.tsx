@@ -21,7 +21,7 @@ export const StatsHUD = ({ params, state, status, range, maxHeight, flightTime, 
   const sinV = Math.sin(theta);
   const cosV = Math.cos(theta);
   const angleLabel = params.angleUnit === "rad"
-    ? `${fmt(params.angleDeg, 4)} rad`
+    ? `${fmt(params.angleDeg, 2)} rad`
     : `${fmt(params.angleDeg, 2)}°`;
   const hit = targetMode && targetX != null && status === "landed" ? Math.abs(state.x - targetX) <= 1.5 : false;
 
@@ -46,9 +46,9 @@ export const StatsHUD = ({ params, state, status, range, maxHeight, flightTime, 
           <div className="mt-1 pt-1 border-t border-border/50 space-y-1">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Trig (launch θ)</div>
             <Row label="θ" value={angleLabel} />
-            <Row label="sin θ" value={fmt(sinV, 4)} accent="text-sim-vectorY" />
-            <Row label="cos θ" value={fmt(cosV, 4)} accent="text-sim-vectorX" />
-            <Row label="tan θ" value={Math.abs(cosV) < 1e-9 ? "—" : fmt(sinV / cosV, 4)} />
+            <Row label="sin θ" value={fmt(sinV, 2)} accent="text-sim-vectorY" />
+            <Row label="cos θ" value={fmt(cosV, 2)} accent="text-sim-vectorX" />
+            <Row label="tan θ" value={Math.abs(cosV) < 1e-9 ? "—" : fmt(sinV / cosV, 2)} />
           </div>
         </div>
       </DraggableCard>
