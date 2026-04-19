@@ -129,6 +129,7 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
       stateRef.current = init;
       setState(init);
       setTrail([]);
+      elapsedRef.current = 0;
     }
     statusRef.current = "running";
     setStatus("running");
@@ -151,6 +152,7 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
     lastTimeRef.current = null;
+    elapsedRef.current = 0;
     const init = initialState(paramsRef.current);
     stateRef.current = init;
     setState(init);
@@ -164,7 +166,13 @@ export function useSimulation(params: ProjectileParams): UseSimulationReturn {
     let s = stateRef.current;
     if (s.landed) return;
     const dt = 0.05;
-    s = step(s, paramsRef.current, dt);
+    const p = paramsRef.current;
+    if (!p.dragEnabled) {
+      elapsedRef.current += dt;
+      s = analyticStateAt(p, elapsedRef.current);
+    } else {
+      s = step(s, p, dt);
+    }
     stateRef.current = s;
     setState(s);
     setTrail((prev) => [...prev, { x: s.x, y: s.y }]);
