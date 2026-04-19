@@ -1,39 +1,63 @@
 
 
-## Plan
+## Refactor plan: clean separation of analytic vs simulation physics
 
-**1. Reduce sin/cos/tan display to 2 decimals**
-In `src/components/StatsHUD.tsx`, change `fmt(sinV, 4)`, `fmt(cosV, 4)`, and `fmt(sinV/cosV, 4)` → `fmt(..., 2)`. The angle label for radians also uses 4 decimals — change to 2 for consistency. Calculations themselves stay at full precision; only the display rounds.
+### Goal
+Two independent systems sharing one parameter shape:
+1. **Analytical** (`src/lib/analyticPhysics.ts`) — exact closed-form answers (already exists, no formulas elsewhere).
+2. **Simulation** (`src/lib/physics.ts` + `useSimulation`) — step-based animation only.
 
-**2. Accuracy check (already verified in code)**
-Yes — the math is correct and consistent:
-- `vx = v0·cos θ`, `vy = v0·sin θ` ✓
-- `y = h + vy·t − ½g·t²` ✓
-- Flight time `(vy + √(vy² + 2gh)) / g` ✓
-- Range `vx · t` ✓, Max height `h + vy²/(2g)` ✓
-- Drag-OFF uses analytic formulas (zero drift), drag-ON uses semi-implicit Euler.
-- Inputs snap to 2 decimals so what the student types = what is computed.
+Plus an **Educational / Physics mode** toggle that controls rounding at the display layer only.
 
-**3. Explanations (Grade 7 friendly) — to write in chat reply only, no code change**
+---
 
-**The Drag Window (Live Readouts floating card):**
-Think of it as the projectile's "live report card" while flying:
-- **Time** — seconds since launch (a stopwatch).
-- **x** — how far sideways it has traveled (meters).
-- **y** — how high it is right now (meters).
-- **vₓ** — sideways speed (stays the same with no air).
-- **vᵧ** — up/down speed. **Positive = going up**, **Negative = falling down**. That's why it turns negative after the top — gravity is pulling it down.
-- **|v|** — total speed (combine vₓ and vᵧ like the long side of a right triangle).
-- **Trig section (θ, sin θ, cos θ, tan θ)** — the launch angle and its trig values, which decide how much of v₀ becomes sideways vs. upward speed.
+### 1. Shared parameter structure
+- Keep `ProjectileParams` in `src/lib/physics.ts` as the single source of truth for inputs (already shared).
+- Add a tiny adapter `paramsToAnalyticInput(params)` inside `analyticPhysics.ts` so callers never duplicate the deg/rad conversion. This guarantees both systems read the same inputs the same way.
+- Confirm gravity convention: positive scalar `9.8`. `analyticPhysics` already uses positive g; `physics.ts` already uses positive g (subtracted in equations). No change needed — just document it once at the top of each file.
 
-You can **drag it anywhere** on the screen so it doesn't cover the projectile's path.
+### 2. Strip analytical responsibilities from simulation
+Currently `src/lib/physics.ts` exports `analyticStats` and `sampleAnalyticPath`, which `useSimulation` uses to compute the **predicted dashed path** and **flightTime/range/maxHeight stats** for the canvas. That's analytical math living in the simulation file.
 
-**The Cursor Toggle (Target Mode):**
-It's a "hit the target" mini-game.
-- Turn it ON → a flag appears at a chosen distance (Target X meters).
-- Adjust angle, velocity, or height to try to land the ball on the flag.
-- After landing, the HUD shows **HIT! 🎯** if within ~1.5 m, otherwise tells you how many meters you missed by.
-It teaches that small changes in angle/speed make a big difference in where things land.
+Move both into `analyticPhysics.ts`:
+- `computeAnalyticStats(params)` — returns `{ range, maxHeight, flightTime, apex, landing }` (used by canvas auto-scale and apex marker).
+- `sampleAnalyticPath(params, samples)` — returns dashed-path points.
 
-**Files to edit:** `src/components/StatsHUD.tsx` (4 number-format changes).
+Delete the duplicates from `physics.ts`. `physics.ts` then contains ONLY: `ProjectileParams` type, `initialState`, `step` (Euler integrator), `analyticStateAt` (used as the integrator for drag-OFF time-based animation — this is simulation tick logic, stays here), and `simulateFullTrajectory` (drag-ON full-path preview, simulation logic, stays here).
+
+Update `useSimulation` to import the analytic helpers from `analyticPhysics.ts`.
+
+### 3. Clean data flow
+```
+ProjectileParams (Index.tsx)
+    │
+    ├──► analyticPhysics.ts ──► HUD readouts (range, height, flightTime)
+    │                       └─► Canvas: predicted path, apex marker, auto-scale
+    │
+    └──► useSimulation ──► state, trail (animation only)
+                       └─► Canvas: ball position, trail
+```
+No component computes physics inline. `Index.tsx` calls analytic helpers once and passes results down.
+
+### 4. Educational / Physics mode toggle
+- Add `displayMode: "educational" | "physics"` state in `Index.tsx` (default `"educational"`).
+- Add a small toggle in `ControlPanel` (Switch labeled "Educational mode (round to 2 dp)").
+- `analyticPhysics.computeAnalyticProjectile(input, roundToTwoDecimals)` already supports this — pass `displayMode === "educational"`.
+- `StatsHUD` already uses `fmt(n, 2)` for display, so this toggle primarily controls whether the numerical values themselves (the props) are pre-rounded. To make the toggle visible, switch `fmt`'s decimal count: 2 in educational, 4 in physics. Pass `displayMode` to `StatsHUD`.
+
+### Files touched
+- `src/lib/analyticPhysics.ts` — add `paramsToAnalyticInput`, `computeAnalyticStats`, `sampleAnalyticPath`. Header comment on g convention.
+- `src/lib/physics.ts` — remove `analyticStats` and `sampleAnalyticPath`. Keep `analyticStateAt` (used by simulation tick). Header comment on g convention.
+- `src/hooks/useSimulation.ts` — import analytic helpers from `analyticPhysics.ts`. No behavior change.
+- `src/components/SimulationCanvas.tsx` — if it imports `analyticStats` from physics.ts, repoint to analyticPhysics. (Need to verify with a quick read.)
+- `src/components/ControlPanel.tsx` — add Educational/Physics mode Switch.
+- `src/components/StatsHUD.tsx` — accept `displayMode` prop, use 2 or 4 decimals.
+- `src/pages/Index.tsx` — add `displayMode` state, use `paramsToAnalyticInput`, pass mode to ControlPanel + StatsHUD, pass analytic stats to canvas.
+
+### What stays the same
+- All UI layout, colors, draggable HUD cards, target mode, controls.
+- The simulation's animation behavior (drag on/off integrators).
+- Public component prop shapes other than the additions above.
+
+Awaiting approval to implement.
 
