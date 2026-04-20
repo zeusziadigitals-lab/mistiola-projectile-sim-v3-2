@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
 import { SimulatorHeader, ViewMode } from "@/components/SimulatorHeader";
+import { OnboardingOverlay } from "@/components/OnboardingOverlay";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal } from "lucide-react";
@@ -141,6 +142,7 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
+      <OnboardingOverlay />
       <SimulatorHeader viewMode={viewMode} setViewMode={setViewModePersist} />
       {viewMode === "mobile" ? (
         <main className="flex-1 min-h-0 flex flex-col px-2 py-2 gap-2">
