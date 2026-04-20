@@ -1,6 +1,7 @@
-import { Monitor, Moon, Rocket, Smartphone, Sun } from "lucide-react";
+import { Info, Monitor, Moon, Rocket, Smartphone, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { AboutDialog } from "./AboutDialog";
 
 export type ViewMode = "desktop" | "mobile";
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const SimulatorHeader = ({ viewMode, setViewMode }: Props) => {
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     const stored = localStorage.getItem("pm-theme");
@@ -58,8 +60,19 @@ export const SimulatorHeader = ({ viewMode, setViewMode }: Props) => {
           >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="About this app"
+            title="About"
+            onClick={() => setAboutOpen(true)}
+            className="h-8 w-8"
+          >
+            <Info className="h-4 w-4" />
+          </Button>
         </div>
       </div>
+      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
     </header>
   );
 };

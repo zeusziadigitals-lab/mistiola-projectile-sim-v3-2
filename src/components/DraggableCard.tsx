@@ -40,6 +40,9 @@ export const DraggableCard = ({ initial, children, className, storageKey, title 
     } catch {}
   }, [collapsed, storageKey]);
 
+  const [dragging, setDragging] = useState(false);
+  const [pulse, setPulse] = useState(false);
+
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
@@ -50,6 +53,7 @@ export const DraggableCard = ({ initial, children, className, storageKey, title 
       dy: e.clientY - rect.top,
       dragging: true,
     };
+    setDragging(true);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }, []);
 
@@ -75,6 +79,7 @@ export const DraggableCard = ({ initial, children, className, storageKey, title 
   const onPointerUp = useCallback(
     (e: React.PointerEvent) => {
       dragRef.current.dragging = false;
+      setDragging(false);
       try {
         (e.target as HTMLElement).releasePointerCapture(e.pointerId);
       } catch {}
@@ -86,6 +91,11 @@ export const DraggableCard = ({ initial, children, className, storageKey, title 
     },
     [pos, storageKey]
   );
+
+  const triggerPulse = useCallback(() => {
+    setPulse(true);
+    window.setTimeout(() => setPulse(false), 450);
+  }, []);
 
   // Re-clamp on window resize
   useEffect(() => {
@@ -106,7 +116,11 @@ export const DraggableCard = ({ initial, children, className, storageKey, title 
   return (
     <Card
       ref={cardRef}
-      className={`pointer-events-auto panel-gradient absolute select-none ${className ?? ""}`}
+      className={`pointer-events-auto panel-gradient absolute select-none transition-shadow duration-300 ${
+        dragging || pulse
+          ? "ring-1 ring-primary/60 shadow-[0_0_24px_hsl(var(--primary)/0.55)]"
+          : "ring-0"
+      } ${className ?? ""}`}
       style={{ left: pos.x, top: pos.y }}
     >
       <div className="flex items-center justify-between gap-1 px-2 py-1 border-b border-border/50 text-muted-foreground">
@@ -123,7 +137,10 @@ export const DraggableCard = ({ initial, children, className, storageKey, title 
         </div>
         <button
           type="button"
-          onClick={() => setCollapsed((c) => !c)}
+          onClick={() => {
+            setCollapsed((c) => !c);
+            triggerPulse();
+          }}
           aria-label={collapsed ? "Expand" : "Collapse"}
           className="hover:text-foreground transition-colors p-0.5 rounded"
         >
