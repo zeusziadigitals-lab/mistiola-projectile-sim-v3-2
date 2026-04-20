@@ -37,6 +37,7 @@ export const StatsHUD = ({ params, state, status, range, maxHeight, flightTime, 
       <DraggableCard
         initial={{ x: 12, y: 12 }}
         storageKey="hud-live-pos"
+        title="Live"
         className="w-[210px] text-[11px] sm:text-xs animate-fade-in"
       >
         <div className="space-y-1">
@@ -64,6 +65,7 @@ export const StatsHUD = ({ params, state, status, range, maxHeight, flightTime, 
         <DraggableCard
           initial={{ x: 9999, y: 9999 }}
           storageKey="hud-final-pos"
+          title="Final"
           className="w-[200px] text-[11px] sm:text-xs animate-scale-in"
         >
           <div className="space-y-1">
@@ -88,6 +90,7 @@ export const StatsHUD = ({ params, state, status, range, maxHeight, flightTime, 
         <DraggableCard
           initial={{ x: 9999, y: 12 }}
           storageKey="hud-target-pos"
+          title="Target"
           className="w-[160px] text-[11px] animate-fade-in"
         >
           🎯 Target at <span className="font-bold text-sim-target">{fmt(targetX, 1)} m</span>
