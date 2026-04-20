@@ -61,6 +61,11 @@ const Index = () => {
     stepOnce,
   } = useSimulation(params);
 
+  const handleStart = useCallback(() => {
+    if (viewMode === "mobile") setMobileControlsOpen(false);
+    start();
+  }, [viewMode, start]);
+
   // Authoritative displayed stats come ONLY from analyticPhysics.ts.
   // The simulation hook is used purely for visualization (animation, trail, predicted path).
   // Educational mode pre-rounds the result to 2 dp; Physics mode keeps full precision.
@@ -80,7 +85,7 @@ const Index = () => {
       status={status}
       timeScale={timeScale}
       setTimeScale={setTimeScale}
-      onStart={start}
+      onStart={handleStart}
       onPause={pause}
       onReset={reset}
       onStep={stepOnce}
