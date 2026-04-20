@@ -40,6 +40,7 @@ const Index = () => {
     if (saved === "mobile" || saved === "desktop") return saved;
     return window.innerWidth < 768 ? "mobile" : "desktop";
   });
+  const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
 
   const setViewModePersist = (m: ViewMode) => {
     setViewMode(m);
