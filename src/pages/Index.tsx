@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { SimulatorHeader, ViewMode } from "@/components/SimulatorHeader";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ const Index = () => {
     if (saved === "mobile" || saved === "desktop") return saved;
     return window.innerWidth < 768 ? "mobile" : "desktop";
   });
+  const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
 
   const setViewModePersist = (m: ViewMode) => {
     setViewMode(m);
@@ -60,6 +61,11 @@ const Index = () => {
     stepOnce,
   } = useSimulation(params);
 
+  const handleStart = useCallback(() => {
+    if (viewMode === "mobile") setMobileControlsOpen(false);
+    start();
+  }, [viewMode, start]);
+
   // Authoritative displayed stats come ONLY from analyticPhysics.ts.
   // The simulation hook is used purely for visualization (animation, trail, predicted path).
   // Educational mode pre-rounds the result to 2 dp; Physics mode keeps full precision.
@@ -79,7 +85,7 @@ const Index = () => {
       status={status}
       timeScale={timeScale}
       setTimeScale={setTimeScale}
-      onStart={start}
+      onStart={handleStart}
       onPause={pause}
       onReset={reset}
       onStep={stepOnce}
@@ -139,7 +145,7 @@ const Index = () => {
       {viewMode === "mobile" ? (
         <main className="flex-1 min-h-0 flex flex-col px-2 py-2 gap-2">
           <div className="flex items-center justify-between gap-2">
-            <Sheet>
+            <Sheet open={mobileControlsOpen} onOpenChange={setMobileControlsOpen}>
               <SheetTrigger asChild>
                 <Button size="sm" variant="outline" className="h-9 flex-1">
                   <SlidersHorizontal className="mr-2 h-4 w-4" /> Controls

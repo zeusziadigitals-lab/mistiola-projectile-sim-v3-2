@@ -31,7 +31,7 @@ export const SimulatorHeader = ({ viewMode, setViewMode }: Props) => {
           </div>
           <div className="leading-tight min-w-0">
             <h1 className="text-sm font-bold tracking-tight text-glow truncate">
-              PROJECTILE MOTION SIMULATOR
+              PROJECTILE MOTION SIMULATOR v3.2.0
             </h1>
             <p className="text-[10px] text-muted-foreground truncate">
               by SIR RENE D. MISTIOLA
