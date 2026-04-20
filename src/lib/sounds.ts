@@ -48,6 +48,7 @@ const playTones = (tones: Tone[]) => {
 export const sfx = {
   click: () => playTones([{ freq: 880, type: "square", dur: 0.05, gain: 0.035, slideTo: 1320 }]),
   toggle: () => playTones([{ freq: 660, type: "triangle", dur: 0.05, gain: 0.04, slideTo: 990 }]),
+  tick: () => playTones([{ freq: 1200, type: "sine", dur: 0.015, gain: 0.02 }]),
   open: () => playTones([
     { freq: 520, type: "sine", dur: 0.07, gain: 0.05, slideTo: 880 },
     { freq: 1040, type: "sine", dur: 0.08, gain: 0.04, slideTo: 1480 },

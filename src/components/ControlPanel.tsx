@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { ProjectileParams } from "@/lib/physics";
+import { sfx } from "@/lib/sounds";
 import { Pause, Play, RotateCcw, SkipForward, Target } from "lucide-react";
 import { PresetSelector, Preset } from "./PresetSelector";
 import { SimStatus } from "@/hooks/useSimulation";
@@ -48,9 +49,20 @@ interface FieldProps {
 // guaranteeing displayed inputs and computed results stay consistent.
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+// Simple throttle for slider tick sounds to avoid audio spam
+let lastTickTime = 0;
+const TICK_COOLDOWN = 50; // ms between ticks
+
 const Field = ({ label, value, min, max, step, unit, onChange }: FieldProps) => {
   const display = Number.isFinite(value) ? round2(value) : 0;
-  const emit = (v: number) => onChange(round2(Math.max(min, Math.min(max, v))));
+  const emit = (v: number) => {
+    onChange(round2(Math.max(min, Math.min(max, v))));
+    const now = performance.now();
+    if (now - lastTickTime > TICK_COOLDOWN) {
+      sfx.tick();
+      lastTickTime = now;
+    }
+  };
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between gap-2">

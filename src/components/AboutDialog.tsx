@@ -13,21 +13,21 @@ export const AboutDialog = ({ open, onOpenChange }: Props) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto panel-gradient">
-        <DialogHeader>
-          <DialogTitle className="text-glow flex items-center gap-2">
+      <DialogHeader className="text-center">
+          <DialogTitle className="text-glow flex items-center justify-center gap-2 mx-auto">
             <Rocket className="h-5 w-5 text-primary" />
-            About Projectile Motion Simulator
+            Projectile Motion Simulator
           </DialogTitle>
-          <DialogDescription className="text-xs">
+          <DialogDescription className="text-xs mx-auto">
             Version 3.2.0 · Educational physics tool
           </DialogDescription>
         </DialogHeader>
 
-        <section className="space-y-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
+        <section className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center justify-center gap-1.5">
             <Rocket className="h-3.5 w-3.5" /> About the App
           </h3>
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p className="text-sm sm:text-base leading-relaxed text-muted-foreground text-center px-2 sm:px-4">
             This interactive simulation is designed to support the learning of projectile motion as
             presented in the{" "}
             <a
@@ -37,7 +37,7 @@ export const AboutDialog = ({ open, onOpenChange }: Props) => {
               className="story-link inline-flex items-center gap-0.5 text-primary font-medium"
             >
               Technology-Mediated Strategic Intervention Material
-              <ExternalLink className="h-3 w-3" />
+              <ExternalLink className="h-3 w-3 shrink-0" />
             </a>
             . It allows students to visualize and explore how objects move through the air by
             adjusting variables such as velocity, angle, and height. By combining real-time
@@ -47,11 +47,11 @@ export const AboutDialog = ({ open, onOpenChange }: Props) => {
           </p>
         </section>
 
-        <section className="space-y-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
+        <section className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center justify-center gap-1.5">
             <User className="h-3.5 w-3.5" /> About the Proponent
           </h3>
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p className="text-sm sm:text-base leading-relaxed text-muted-foreground text-center px-2 sm:px-4">
             This application is based on the Technology-Mediated Strategic Intervention Material in
             General Physics 1 developed by{" "}
             <a
@@ -59,7 +59,7 @@ export const AboutDialog = ({ open, onOpenChange }: Props) => {
               className="story-link inline-flex items-center gap-0.5 text-primary font-medium"
             >
               Rene D. Mistiola
-              <Mail className="h-3 w-3" />
+              <Mail className="h-3 w-3 shrink-0" />
             </a>{" "}
             under the Department of Education – Schools Division of Batangas. The proponent aims to
             enhance physics education through interactive technology by transforming traditional
