@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { GripVertical } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical } from "lucide-react";
 import { useRef, useState, useCallback, useEffect, ReactNode } from "react";
 
 interface Props {
@@ -7,9 +7,11 @@ interface Props {
   children: ReactNode;
   className?: string;
   storageKey?: string;
+  title?: string;
+  defaultCollapsed?: boolean;
 }
 
-export const DraggableCard = ({ initial, children, className, storageKey }: Props) => {
+export const DraggableCard = ({ initial, children, className, storageKey, title = "Drag", defaultCollapsed = false }: Props) => {
   const [pos, setPos] = useState(() => {
     if (storageKey && typeof window !== "undefined") {
       try {
@@ -19,8 +21,24 @@ export const DraggableCard = ({ initial, children, className, storageKey }: Prop
     }
     return initial;
   });
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (storageKey && typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(`${storageKey}-collapsed`);
+        if (saved != null) return saved === "1";
+      } catch {}
+    }
+    return defaultCollapsed;
+  });
   const dragRef = useRef<{ dx: number; dy: number; dragging: boolean }>({ dx: 0, dy: 0, dragging: false });
   const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      localStorage.setItem(`${storageKey}-collapsed`, collapsed ? "1" : "0");
+    } catch {}
+  }, [collapsed, storageKey]);
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (!cardRef.current) return;
@@ -91,18 +109,28 @@ export const DraggableCard = ({ initial, children, className, storageKey }: Prop
       className={`pointer-events-auto panel-gradient absolute select-none ${className ?? ""}`}
       style={{ left: pos.x, top: pos.y }}
     >
-      <div
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        className="flex items-center gap-1 cursor-grab active:cursor-grabbing px-2 py-1 border-b border-border/50 text-muted-foreground hover:text-foreground transition-colors touch-none"
-        title="Drag to move"
-      >
-        <GripVertical className="w-3 h-3" />
-        <span className="text-[9px] uppercase tracking-wider">Drag</span>
+      <div className="flex items-center justify-between gap-1 px-2 py-1 border-b border-border/50 text-muted-foreground">
+        <div
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          className="flex flex-1 items-center gap-1 cursor-grab active:cursor-grabbing hover:text-foreground transition-colors touch-none"
+          title="Drag to move"
+        >
+          <GripVertical className="w-3 h-3" />
+          <span className="text-[9px] uppercase tracking-wider">{title}</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-label={collapsed ? "Expand" : "Collapse"}
+          className="hover:text-foreground transition-colors p-0.5 rounded"
+        >
+          {collapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+        </button>
       </div>
-      <div className="p-3">{children}</div>
+      {!collapsed && <div className="p-3">{children}</div>}
     </Card>
   );
 };
