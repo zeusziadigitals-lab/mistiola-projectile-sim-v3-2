@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Rocket, User, ExternalLink, Mail } from "lucide-react";
+import { Rocket, User, ExternalLink, Mail, FileText, FileType2, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   open: boolean;
@@ -67,6 +68,50 @@ export const AboutDialog = ({ open, onOpenChange }: Props) => {
             guided and independent learning, helping students connect theoretical concepts with
             real-world motion.
           </p>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center justify-center gap-1.5">
+            <BookOpen className="h-3.5 w-3.5" /> Documentation
+          </h3>
+          <p className="text-sm leading-relaxed text-muted-foreground text-center px-2 sm:px-4">
+            Download the official documentation covering the user guide, physics explanation,
+            technical details, and more.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center pt-1">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <a
+                href="/docs/Projectile_Motion_Simulator_Documentation.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+              >
+                <FileText className="h-4 w-4" />
+                Download PDF
+              </a>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <a
+                href="/docs/Projectile_Motion_Simulator_Documentation.docx"
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+              >
+                <FileType2 className="h-4 w-4" />
+                Download DOCX
+              </a>
+            </Button>
+          </div>
         </section>
       </DialogContent>
     </Dialog>
