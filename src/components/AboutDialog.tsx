@@ -1,6 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Rocket, User, ExternalLink, Mail, FileText, FileType2, BookOpen } from "lucide-react";
+import { Rocket, User, ExternalLink, Mail, FileText, FileType2, BookOpen, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { useEffect, useState } from "react";
+import { isOnboardingEnabled, setOnboardingEnabled } from "./OnboardingOverlay";
 
 interface Props {
   open: boolean;
@@ -11,6 +14,17 @@ const TMSIM_URL = "https://drive.google.com/drive/folders/1lbzVuuO_Ufo4KlFUFrLO2
 const PROPONENT_EMAIL = "rene.mistiola@deped.gov.ph";
 
 export const AboutDialog = ({ open, onOpenChange }: Props) => {
+  const [showOnboarding, setShowOnboarding] = useState(true);
+
+  useEffect(() => {
+    if (open) setShowOnboarding(isOnboardingEnabled());
+  }, [open]);
+
+  const toggleOnboarding = (v: boolean) => {
+    setShowOnboarding(v);
+    setOnboardingEnabled(v);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto panel-gradient">
@@ -111,6 +125,21 @@ export const AboutDialog = ({ open, onOpenChange }: Props) => {
                 Download DOCX
               </a>
             </Button>
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center justify-center gap-1.5">
+            <Settings className="h-3.5 w-3.5" /> Preferences
+          </h3>
+          <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
+            <div className="min-w-0 pr-3">
+              <p className="text-sm font-medium">Show Quick Start on startup</p>
+              <p className="text-xs text-muted-foreground">
+                Display the onboarding popup every time the app loads.
+              </p>
+            </div>
+            <Switch checked={showOnboarding} onCheckedChange={toggleOnboarding} />
           </div>
         </section>
       </DialogContent>

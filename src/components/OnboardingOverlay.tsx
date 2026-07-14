@@ -1,23 +1,34 @@
 import { useEffect, useState } from "react";
 import { Rocket, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { sfx } from "@/lib/sounds";
 
-const STORAGE_KEY = "pm-onboarding-dismissed-v1";
+const ENABLED_KEY = "pm-onboarding-enabled";
+
+export const isOnboardingEnabled = () => {
+  try {
+    const v = localStorage.getItem(ENABLED_KEY);
+    return v === null ? true : v === "1";
+  } catch {
+    return true;
+  }
+};
+
+export const setOnboardingEnabled = (enabled: boolean) => {
+  try { localStorage.setItem(ENABLED_KEY, enabled ? "1" : "0"); } catch {}
+};
 
 export const OnboardingOverlay = () => {
   const [open, setOpen] = useState(false);
+  const [dontShow, setDontShow] = useState(false);
 
   useEffect(() => {
-    try {
-      if (!localStorage.getItem(STORAGE_KEY)) setOpen(true);
-    } catch {
-      setOpen(true);
-    }
+    if (isOnboardingEnabled()) setOpen(true);
   }, []);
 
   const dismiss = () => {
-    try { localStorage.setItem(STORAGE_KEY, "1"); } catch {}
+    if (dontShow) setOnboardingEnabled(false);
     sfx.close?.();
     setOpen(false);
   };
@@ -75,9 +86,20 @@ export const OnboardingOverlay = () => {
         <p className="text-left text-sm text-muted-foreground mb-1">
           💡 Try different values to see how the motion changes
         </p>
-        <p className="text-left text-sm font-medium text-foreground/90 mb-5">
+        <p className="text-left text-sm font-medium text-foreground/90 mb-4">
           Happy learning
         </p>
+
+        <label className="flex items-center gap-2 mb-4 cursor-pointer select-none">
+          <Checkbox
+            checked={dontShow}
+            onCheckedChange={(v) => setDontShow(v === true)}
+            id="onboarding-dont-show"
+          />
+          <span className="text-xs text-muted-foreground">
+            Don't show this on startup (you can re-enable it in About)
+          </span>
+        </label>
 
         <Button onClick={dismiss} className="w-full glow-primary">
           Get Started
